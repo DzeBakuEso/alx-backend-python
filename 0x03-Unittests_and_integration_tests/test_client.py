@@ -1,10 +1,8 @@
 import unittest
 from unittest.mock import patch, MagicMock
 from parameterized import parameterized_class
-import requests
-
-from client import GithubOrgClient  # Adjust if your import path differs
-import fixtures  # Make sure fixtures.py is in the same directory
+from client import GithubOrgClient
+import fixtures
 
 
 @parameterized_class([
@@ -18,11 +16,9 @@ import fixtures  # Make sure fixtures.py is in the same directory
 class TestIntegrationGithubOrgClient(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        # Patch requests.get globally for all tests in this class
         cls.get_patcher = patch('requests.get')
         cls.mock_get = cls.get_patcher.start()
 
-        # Define side_effect function to return different payloads based on URL
         def side_effect(url, *args, **kwargs):
             mock_resp = MagicMock()
             if url == cls.org_payload['repos_url']:
@@ -40,14 +36,13 @@ class TestIntegrationGithubOrgClient(unittest.TestCase):
         cls.get_patcher.stop()
 
     def test_public_repos(self):
-        # Initialize GithubOrgClient with the org login from the fixture
+        """Test GithubOrgClient.public_repos returns expected repo list"""
         client = GithubOrgClient(self.org_payload['login'])
         repos = client.public_repos()
-
-        # Test if returned repos match the expected repos list
         self.assertEqual(repos, self.expected_repos)
 
     def test_public_repos_with_license(self):
+        """Test GithubOrgClient.public_repos filtering by license"""
         client = GithubOrgClient(self.org_payload['login'])
-        repos_with_apache2 = client.public_repos(license="apache-2.0")
-        self.assertEqual(repos_with_apache2, self.apache2_repos)
+        repos = client.public_repos(license="apache-2.0")
+        self.assertEqual(repos, self.apache2_repos)
